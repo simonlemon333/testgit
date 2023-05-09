@@ -141,6 +141,7 @@
 				"     insertable:false,",
 				"     updateable:true,",
 				"     upsertable:false,",
+				"     keys:['key'],",
 				"     format: 'table',",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",

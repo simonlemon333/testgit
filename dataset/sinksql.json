@@ -9,6 +9,21 @@
 		"type": "AzureSqlTable",
 		"schema": [
 			{
+				"name": "key",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "active",
+				"type": "bit"
+			},
+			{
+				"name": "created",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
 				"name": "id",
 				"type": "int",
 				"precision": 10

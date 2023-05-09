@@ -90,7 +90,7 @@
 				"Blobsource keyGenerate(output(key_root as long),",
 				"     startAt: 1L,",
 				"     stepValue: 1L) ~> AddKeyRoot",
-				"AddKeyRoot, MaxKey join(and(not(isNull(Blobsource@id)),not(isNull(Max_Key))),",
+				"AddKeyRoot, MaxKey join(and(not(isNull(id)),not(isNull(Max_Key))),",
 				"     joinType:'cross',",
 				"     matchType:'exact',",
 				"     ignoreSpaces: false,",

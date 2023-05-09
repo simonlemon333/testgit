@@ -1,0 +1,69 @@
+{
+	"name": "dataflow2",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "NewSource",
+						"type": "DatasetReference"
+					},
+					"name": "source1"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "sink1",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				},
+				{
+					"dataset": {
+						"referenceName": "sink2",
+						"type": "DatasetReference"
+					},
+					"name": "sink2"
+				}
+			],
+			"transformations": [
+				{
+					"name": "AggregateByCompanyName"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          first_name as string,",
+				"          last_name as string,",
+				"          company_name as string,",
+				"          address as string,",
+				"          city as string,",
+				"          county as string,",
+				"          state as string,",
+				"          zip as string,",
+				"          phone1 as string,",
+				"          phone2 as string,",
+				"          email as string,",
+				"          web as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> source1",
+				"source1 aggregate(groupBy(company_name),",
+				"     employee_count = count()) ~> AggregateByCompanyName",
+				"AggregateByCompanyName sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     saveOrder: 1) ~> sink1",
+				"source1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     saveOrder: 1) ~> sink2"
+			]
+		}
+	}
+}

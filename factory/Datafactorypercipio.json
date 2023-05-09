@@ -1,0 +1,9 @@
+{
+	"name": "Datafactorypercipio",
+	"location": "eastasia",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "b0f7ab26-8ddf-4e78-bfad-e08d3a6e2141",
+		"tenantId": "0e7d87fe-c978-4fab-a7c4-ce060936f906"
+	}
+}

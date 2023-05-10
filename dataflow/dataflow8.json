@@ -1,0 +1,57 @@
+{
+	"name": "dataflow8",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "InputJson",
+						"type": "DatasetReference"
+					},
+					"name": "InputJson"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "OutputJson",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "flatten1"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          albums as (name as string, tracks as (trackid as integer, name as string)[])[]",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     documentForm: 'documentPerLine') ~> InputJson",
+				"InputJson foldDown(unroll(albums.tracks),",
+				"     mapColumn(",
+				"          album_name = albums.name,",
+				"          track_id = albums.tracks.trackid,",
+				"          track_name = albums.tracks.name",
+				"     ),",
+				"     skipDuplicateMapInputs: false,",
+				"     skipDuplicateMapOutputs: false) ~> flatten1",
+				"flatten1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          albums as (name as string, tracks as (trackid as integer, name as string)[])[]",
+				"     ),",
+				"     partitionFileNames:['AlbumsFlattened'],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> sink1"
+			]
+		}
+	}
+}

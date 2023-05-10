@@ -1,0 +1,48 @@
+{
+	"name": "InputJson",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureBlobStorage1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": "Albums.json",
+				"container": "source"
+			}
+		},
+		"schema": {
+			"type": "object",
+			"properties": {
+				"albums": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"properties": {
+							"name": {
+								"type": "string"
+							},
+							"tracks": {
+								"type": "array",
+								"items": {
+									"type": "object",
+									"properties": {
+										"trackid": {
+											"type": "integer"
+										},
+										"name": {
+											"type": "string"
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}

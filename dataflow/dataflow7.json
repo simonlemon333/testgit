@@ -1,0 +1,81 @@
+{
+	"name": "dataflow7",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "Persontable",
+						"type": "DatasetReference"
+					},
+					"name": "PersonTable"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "AdultTable",
+						"type": "DatasetReference"
+					},
+					"name": "AdultTable"
+				},
+				{
+					"dataset": {
+						"referenceName": "ChildTable",
+						"type": "DatasetReference"
+					},
+					"name": "ChildTable"
+				}
+			],
+			"transformations": [
+				{
+					"name": "split1"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          person_id as integer,",
+				"          name as string,",
+				"          age as integer",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> PersonTable",
+				"PersonTable split(age>=18,",
+				"     disjoint: false) ~> split1@(Adults, Children)",
+				"split1@Adults sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          person_id as integer,",
+				"          name as string,",
+				"          age as integer",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> AdultTable",
+				"split1@Children sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          person_id as integer,",
+				"          name as string,",
+				"          age as integer",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> ChildTable"
+			]
+		}
+	}
+}

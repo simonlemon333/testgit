@@ -1,0 +1,72 @@
+{
+	"name": "dataflow10",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "Input",
+						"type": "DatasetReference"
+					},
+					"name": "source1"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "output",
+						"type": "DatasetReference"
+					},
+					"name": "OutPut"
+				}
+			],
+			"transformations": [
+				{
+					"name": "CreateUniqueID"
+				},
+				{
+					"name": "SplitNameField"
+				},
+				{
+					"name": "RemoveNameField"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          name as string,",
+				"          age as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> source1",
+				"source1 keyGenerate(output(id as long),",
+				"     startAt: 1L,",
+				"     stepValue: 1L) ~> CreateUniqueID",
+				"CreateUniqueID derive(First_Name = split(name, \" \")[1],",
+				"          Last_Name = split(name,\" \")[2]) ~> SplitNameField",
+				"SplitNameField select(mapColumn(",
+				"          age,",
+				"          id,",
+				"          First_Name,",
+				"          Last_Name",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> RemoveNameField",
+				"RemoveNameField sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          id as string,",
+				"          first_name as string,",
+				"          last_name as string,",
+				"          age as string,",
+				"          hobby as string",
+				"     ),",
+				"     partitionFileNames:['NormailzedPeople.csv'],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> OutPut"
+			]
+		}
+	}
+}

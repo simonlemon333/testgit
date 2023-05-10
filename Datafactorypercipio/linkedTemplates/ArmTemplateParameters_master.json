@@ -8,6 +8,9 @@
 		"AzureBlobStorage1_connectionString": {
 			"value": ""
 		},
+		"AzureSqlDatabase_connectionString": {
+			"value": ""
+		},
 		"sinkservice_connectionString": {
 			"value": ""
 		},

@@ -13,6 +13,500 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/dataflow3')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "source3",
+								"type": "DatasetReference"
+							},
+							"name": "source1"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "sinksql",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "AlterRow1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          id as integer,",
+						"          first_name as string,",
+						"          last_name as string,",
+						"          age as string,",
+						"          hobby as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> source1",
+						"source1 alterRow(upsertIf(true())) ~> AlterRow1",
+						"AlterRow1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          key as integer,",
+						"          active as boolean,",
+						"          created as timestamp,",
+						"          id as integer,",
+						"          first_name as string,",
+						"          last_name as string,",
+						"          age as integer,",
+						"          hobby as string",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:false,",
+						"     updateable:false,",
+						"     upsertable:true,",
+						"     keys:['id'],",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> sink1"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dataflow4')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "source",
+								"type": "DatasetReference"
+							},
+							"name": "Blobsource"
+						},
+						{
+							"dataset": {
+								"referenceName": "sinksql",
+								"type": "DatasetReference"
+							},
+							"name": "SinkAsSource"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "sinksql",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "exists1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          id as integer,",
+						"          first_name as string,",
+						"          last_name as string,",
+						"          age as string,",
+						"          hobby as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> Blobsource",
+						"source(output(",
+						"          key as integer,",
+						"          active as boolean,",
+						"          created as timestamp,",
+						"          id as integer,",
+						"          first_name as string,",
+						"          last_name as string,",
+						"          age as integer,",
+						"          hobby as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> SinkAsSource",
+						"Blobsource, SinkAsSource exists(Blobsource@id == SinkAsSource@id,",
+						"     negate:true,",
+						"     broadcast: 'auto')~> exists1",
+						"exists1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          key as integer,",
+						"          active as boolean,",
+						"          created as timestamp,",
+						"          id as integer,",
+						"          first_name as string,",
+						"          last_name as string,",
+						"          age as integer,",
+						"          hobby as string",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> sink1"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dataflow5')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "source",
+								"type": "DatasetReference"
+							},
+							"name": "Blobsource"
+						},
+						{
+							"dataset": {
+								"referenceName": "sinksql",
+								"type": "DatasetReference"
+							},
+							"name": "SinkasSource"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "sinksql",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						},
+						{
+							"dataset": {
+								"referenceName": "sinksql",
+								"type": "DatasetReference"
+							},
+							"name": "sink2"
+						}
+					],
+					"transformations": [
+						{
+							"name": "MaxKey"
+						},
+						{
+							"name": "AddKeyRoot"
+						},
+						{
+							"name": "AddMaxKey"
+						},
+						{
+							"name": "CalculateNewKey"
+						},
+						{
+							"name": "derivedColumn1"
+						},
+						{
+							"name": "GetOldRecords"
+						},
+						{
+							"name": "setactivefalse"
+						},
+						{
+							"name": "alterRow1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          id as integer,",
+						"          first_name as string,",
+						"          last_name as string,",
+						"          age as string,",
+						"          hobby as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> Blobsource",
+						"source(output(",
+						"          key as integer,",
+						"          active as boolean,",
+						"          created as timestamp,",
+						"          id as integer,",
+						"          first_name as string,",
+						"          last_name as string,",
+						"          age as integer,",
+						"          hobby as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> SinkasSource",
+						"SinkasSource aggregate(Max_Key = iifNull(max(key), 0)) ~> MaxKey",
+						"Blobsource keyGenerate(output(key_root as long),",
+						"     startAt: 1L,",
+						"     stepValue: 1L) ~> AddKeyRoot",
+						"AddKeyRoot, MaxKey join(and(not(isNull(id)),not(isNull(Max_Key))),",
+						"     joinType:'cross',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> AddMaxKey",
+						"AddMaxKey derive(key = toInteger(add(key_root,Max_Key))) ~> CalculateNewKey",
+						"CalculateNewKey derive(active = true(),",
+						"          created = currentUTC()) ~> derivedColumn1",
+						"Blobsource, SinkasSource join(and(Blobsource@id==SinkasSource@id,active==true()),",
+						"     joinType:'cross',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> GetOldRecords",
+						"GetOldRecords derive(active = false()) ~> setactivefalse",
+						"setactivefalse alterRow(updateIf(true())) ~> alterRow1",
+						"derivedColumn1 sink(allowSchemaDrift: false,",
+						"     validateSchema: false,",
+						"     input(",
+						"          key as integer,",
+						"          active as boolean,",
+						"          created as timestamp,",
+						"          id as integer,",
+						"          first_name as string,",
+						"          last_name as string,",
+						"          age as integer,",
+						"          hobby as string",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> sink1",
+						"alterRow1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          key as integer,",
+						"          active as boolean,",
+						"          created as timestamp,",
+						"          id as integer,",
+						"          first_name as string,",
+						"          last_name as string,",
+						"          age as integer,",
+						"          hobby as string",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:false,",
+						"     updateable:true,",
+						"     upsertable:false,",
+						"     keys:['key'],",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> sink2"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dataflow6')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "house_listings",
+								"type": "DatasetReference"
+							},
+							"name": "houselistings"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "bungalow_listings",
+								"type": "DatasetReference"
+							},
+							"name": "bungalowlistings"
+						}
+					],
+					"transformations": [
+						{
+							"name": "BungalowsOnly"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          Listing_ID as string,",
+						"          Type as string,",
+						"          Address as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> houselistings",
+						"houselistings filter(equalsIgnoreCase(Type, 'Bungalow')) ~> BungalowsOnly",
+						"BungalowsOnly sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> bungalowlistings"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dataflow7')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "Persontable",
+								"type": "DatasetReference"
+							},
+							"name": "PersonTable"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "AdultTable",
+								"type": "DatasetReference"
+							},
+							"name": "AdultTable"
+						},
+						{
+							"dataset": {
+								"referenceName": "ChildTable",
+								"type": "DatasetReference"
+							},
+							"name": "ChildTable"
+						}
+					],
+					"transformations": [
+						{
+							"name": "split1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          person_id as integer,",
+						"          name as string,",
+						"          age as integer",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> PersonTable",
+						"PersonTable split(age>=18,",
+						"     disjoint: false) ~> split1@(Adults, Children)",
+						"split1@Adults sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          person_id as integer,",
+						"          name as string,",
+						"          age as integer",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> AdultTable",
+						"split1@Children sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          person_id as integer,",
+						"          name as string,",
+						"          age as integer",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> ChildTable"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ConditionalSplit')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "dataflow7",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "dataflow7",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"PersonTable": {},
+									"AdultTable": {},
+									"ChildTable": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/dataflow7')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/dimension')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -57,7 +551,9 @@
 				},
 				"annotations": []
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/dataflow5')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/houselisting')]",
@@ -102,7 +598,9 @@
 				},
 				"annotations": []
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/dataflow6')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/incremental')]",
@@ -149,7 +647,9 @@
 				"annotations": [],
 				"lastPublishTime": "2023-05-09T06:09:47Z"
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/dataflow4')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/practice2')]",
@@ -243,7 +743,9 @@
 				"annotations": [],
 				"lastPublishTime": "2023-05-09T02:29:27Z"
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/dataflow3')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/trigger1')]",

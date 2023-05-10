@@ -19,6 +19,10 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'sourceservice'"
 		},
+		"AzureKeyVault1_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://keyvauktpercipio.vault.azure.net/"
+		},
 		"containerUri": {
 			"type": "string",
 			"metadata": "URI to storage account containing linked ARM templates"
@@ -54,6 +58,9 @@
 					},
 					"sourceservice_connectionString": {
 						"value": "[parameters('sourceservice_connectionString')]"
+					},
+					"AzureKeyVault1_properties_typeProperties_baseUrl": {
+						"value": "[parameters('AzureKeyVault1_properties_typeProperties_baseUrl')]"
 					}
 				}
 			},

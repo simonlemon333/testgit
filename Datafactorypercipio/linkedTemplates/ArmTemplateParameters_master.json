@@ -14,6 +14,9 @@
 		"sourceservice_connectionString": {
 			"value": ""
 		},
+		"AzureKeyVault1_properties_typeProperties_baseUrl": {
+			"value": "https://keyvauktpercipio.vault.azure.net/"
+		},
 		"containerUri": {
 			"value": ""
 		},

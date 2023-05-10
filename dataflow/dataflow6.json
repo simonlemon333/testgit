@@ -1,0 +1,46 @@
+{
+	"name": "dataflow6",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "house_listings",
+						"type": "DatasetReference"
+					},
+					"name": "houselistings"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "bungalow_listings",
+						"type": "DatasetReference"
+					},
+					"name": "bungalowlistings"
+				}
+			],
+			"transformations": [
+				{
+					"name": "BungalowsOnly"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          Listing_ID as string,",
+				"          Type as string,",
+				"          Address as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> houselistings",
+				"houselistings filter(equalsIgnoreCase(Type, 'Bungalow')) ~> BungalowsOnly",
+				"BungalowsOnly sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> bungalowlistings"
+			]
+		}
+	}
+}

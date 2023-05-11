@@ -1,0 +1,55 @@
+{
+	"name": "dataflow11",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "People",
+						"type": "DatasetReference"
+					},
+					"name": "source1"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "FilteredPeople",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "DistinctRows"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          first_name as string,",
+				"          last_name as string,",
+				"          age as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> source1",
+				"source1 aggregate(groupBy(mycols = sha2(256,columns())),",
+				"     each(match(true()), $$ = first($$))) ~> DistinctRows",
+				"DistinctRows sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          age as string,",
+				"          id as string,",
+				"          First_Name as string,",
+				"          Last_Name as string",
+				"     ),",
+				"     partitionFileNames:['FilteredPeople.csv'],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> sink1"
+			]
+		}
+	}
+}

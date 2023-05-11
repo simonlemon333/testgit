@@ -1,0 +1,39 @@
+{
+	"name": "FilteredPeople",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureBlobStorage1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"container": "source"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "age",
+				"type": "String"
+			},
+			{
+				"name": "id",
+				"type": "String"
+			},
+			{
+				"name": "First_Name",
+				"type": "String"
+			},
+			{
+				"name": "Last_Name",
+				"type": "String"
+			}
+		]
+	}
+}

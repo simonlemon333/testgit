@@ -20,9 +20,6 @@
 		"AzureKeyVault1_properties_typeProperties_baseUrl": {
 			"value": "https://keyvauktpercipio.vault.azure.net/"
 		},
-		"Trigger_wb3_properties_pipeline_parameters_windowStart": {
-			"value": "@trigger().outputs.windowStartTime"
-		},
 		"containerUri": {
 			"value": ""
 		},

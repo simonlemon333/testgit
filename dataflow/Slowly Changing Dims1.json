@@ -35,6 +35,10 @@
 					"name": "sink1"
 				},
 				{
+					"dataset": {
+						"referenceName": "Widget_dim_1",
+						"type": "DatasetReference"
+					},
 					"name": "sink2"
 				}
 			],
@@ -62,6 +66,9 @@
 				},
 				{
 					"name": "derivedColumn2"
+				},
+				{
+					"name": "aggregate1"
 				}
 			],
 			"scriptLines": [
@@ -97,8 +104,7 @@
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     isolationLevel: 'READ_UNCOMMITTED',",
-				"     query: 'select isnull(max(widget_key),1) max_surrogate from Widget_dim_1',",
-				"     format: 'query') ~> MaxsurrogateKey",
+				"     format: 'table') ~> MaxsurrogateKey",
 				"Stg, Destination exists(Stg@widget_id == Destination@widget_id,",
 				"     negate:false,",
 				"     broadcast: 'auto')~> GetUpdatedRecord",
@@ -111,7 +117,7 @@
 				"Stg, Destination exists(Stg@widget_id == Destination@widget_id,",
 				"     negate:true,",
 				"     broadcast: 'auto')~> exists2",
-				"exists2, MaxsurrogateKey join(and(!isNull(widget_id),!isNull(max_surrogate)),",
+				"exists2, aggregate1 join(and(!isNull(widget_id),!isNull(max_surrogate)),",
 				"     joinType:'cross',",
 				"     matchType:'exact',",
 				"     ignoreSpaces: false,",
@@ -119,7 +125,9 @@
 				"join1 keyGenerate(output(surrogate_key_root as long),",
 				"     startAt: 1L,",
 				"     stepValue: 1L) ~> surrogateKey1",
-				"surrogateKey1 derive() ~> derivedColumn2",
+				"surrogateKey1 derive(widget_id = add(max_surrogate,surrogate_key_root),",
+				"          added_date = currentDate('UTC')) ~> derivedColumn2",
+				"MaxsurrogateKey aggregate(max_surrogate = iifNull(max(widget_key), 1)) ~> aggregate1",
 				"alterRow1 sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     input(",
@@ -140,8 +148,22 @@
 				"     errorHandlingOption: 'stopOnFirstError') ~> sink1",
 				"derivedColumn2 sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
+				"     input(",
+				"          widget_key as integer,",
+				"          widget_id as integer,",
+				"          name as string,",
+				"          cost as double,",
+				"          added_date as date,",
+				"          updated_date as date",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
 				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true) ~> sink2"
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> sink2"
 			]
 		}
 	}

@@ -254,6 +254,56 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/Slowly Changing Dims1')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Slowly Changing Dims1",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "Slowly Changing Dims1",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"Stg": {},
+									"Destination": {},
+									"MaxsurrogateKey": {},
+									"sink1": {},
+									"sink2": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/Slowly Changing Dims1')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/badrecords')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -1142,6 +1192,140 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/Widget_dim_1')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureSqlDatabase",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "widget_key",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "widget_id",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "name",
+						"type": "varchar"
+					},
+					{
+						"name": "cost",
+						"type": "float",
+						"precision": 15
+					},
+					{
+						"name": "added_date",
+						"type": "date"
+					},
+					{
+						"name": "updated_date",
+						"type": "date"
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "Widget_dim_1"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabase')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Widget_dim_2')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureSqlDatabase",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "widget_key",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "widget_id",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "name",
+						"type": "varchar"
+					},
+					{
+						"name": "cost",
+						"type": "float",
+						"precision": 15
+					},
+					{
+						"name": "added_date",
+						"type": "date"
+					},
+					{
+						"name": "updated_date",
+						"type": "date"
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "Widget_dim_2"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabase')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Widget_dim_stg')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureSqlDatabase",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "widget_id",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "name",
+						"type": "varchar"
+					},
+					{
+						"name": "cost",
+						"type": "float",
+						"precision": 15
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "Widget_dim_stg"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabase')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/badRecords')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -1650,6 +1834,182 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/Practice1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Slowly Changing Dims1')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "Widget_dim_stg",
+								"type": "DatasetReference"
+							},
+							"name": "Stg"
+						},
+						{
+							"dataset": {
+								"referenceName": "Widget_dim_1",
+								"type": "DatasetReference"
+							},
+							"name": "Destination"
+						},
+						{
+							"dataset": {
+								"referenceName": "Widget_dim_1",
+								"type": "DatasetReference"
+							},
+							"name": "MaxsurrogateKey"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "Widget_dim_1",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						},
+						{
+							"dataset": {
+								"referenceName": "Widget_dim_1",
+								"type": "DatasetReference"
+							},
+							"name": "sink2"
+						}
+					],
+					"transformations": [
+						{
+							"name": "GetUpdatedRecord"
+						},
+						{
+							"name": "AdddestinationFields"
+						},
+						{
+							"name": "derivedUpdateColumns"
+						},
+						{
+							"name": "alterRow1"
+						},
+						{
+							"name": "exists2"
+						},
+						{
+							"name": "join1"
+						},
+						{
+							"name": "surrogateKey1"
+						},
+						{
+							"name": "derivedColumn2"
+						},
+						{
+							"name": "aggregate1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          widget_id as integer,",
+						"          name as string,",
+						"          cost as double",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> Stg",
+						"source(output(",
+						"          widget_key as integer,",
+						"          widget_id as integer,",
+						"          name as string,",
+						"          cost as double,",
+						"          added_date as date,",
+						"          updated_date as date",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> Destination",
+						"source(output(",
+						"          widget_key as integer,",
+						"          widget_id as integer,",
+						"          name as string,",
+						"          cost as double,",
+						"          added_date as date,",
+						"          updated_date as date",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> MaxsurrogateKey",
+						"Stg, Destination exists(Stg@widget_id == Destination@widget_id,",
+						"     negate:false,",
+						"     broadcast: 'auto')~> GetUpdatedRecord",
+						"GetUpdatedRecord, Destination lookup(Stg@widget_id == Destination@widget_id,",
+						"     multiple: false,",
+						"     pickup: 'any',",
+						"     broadcast: 'auto')~> AdddestinationFields",
+						"AdddestinationFields derive(updated_date = currentDate('UTC')) ~> derivedUpdateColumns",
+						"derivedUpdateColumns alterRow(updateIf(true())) ~> alterRow1",
+						"Stg, Destination exists(Stg@widget_id == Destination@widget_id,",
+						"     negate:true,",
+						"     broadcast: 'auto')~> exists2",
+						"exists2, aggregate1 join(and(!isNull(widget_id),!isNull(max_surrogate)),",
+						"     joinType:'cross',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> join1",
+						"join1 keyGenerate(output(surrogate_key_root as long),",
+						"     startAt: 1L,",
+						"     stepValue: 1L) ~> surrogateKey1",
+						"surrogateKey1 derive(widget_key = add(max_surrogate,surrogate_key_root),",
+						"          added_date = currentDate('UTC')) ~> derivedColumn2",
+						"MaxsurrogateKey aggregate(max_surrogate = iifNull(max(widget_key), 1)) ~> aggregate1",
+						"alterRow1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          widget_key as integer,",
+						"          widget_id as integer,",
+						"          name as string,",
+						"          cost as double,",
+						"          added_date as date,",
+						"          updated_date as date",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> sink1",
+						"derivedColumn2 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          widget_key as integer,",
+						"          widget_id as integer,",
+						"          name as string,",
+						"          cost as double,",
+						"          added_date as date,",
+						"          updated_date as date",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> sink2"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/Widget_dim_stg')]",
+				"[concat(variables('factoryId'), '/datasets/Widget_dim_1')]"
 			]
 		},
 		{

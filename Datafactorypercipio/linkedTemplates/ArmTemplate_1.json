@@ -13,6 +13,112 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/Widget_dim_2')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureSqlDatabase",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "widget_key",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "widget_id",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "name",
+						"type": "varchar"
+					},
+					{
+						"name": "cost",
+						"type": "float",
+						"precision": 15
+					},
+					{
+						"name": "added_date",
+						"type": "date"
+					},
+					{
+						"name": "updated_date",
+						"type": "date"
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "Widget_dim_2"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Widget_dim_stg')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureSqlDatabase",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "widget_id",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "name",
+						"type": "varchar"
+					},
+					{
+						"name": "cost",
+						"type": "float",
+						"precision": 15
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "Widget_dim_stg"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/badRecords')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureBlobStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"container": "bad-records"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/bungalow_listings')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -441,6 +547,181 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/Slowly Changing Dims1')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "Widget_dim_stg",
+								"type": "DatasetReference"
+							},
+							"name": "Stg"
+						},
+						{
+							"dataset": {
+								"referenceName": "Widget_dim_1",
+								"type": "DatasetReference"
+							},
+							"name": "Destination"
+						},
+						{
+							"dataset": {
+								"referenceName": "Widget_dim_1",
+								"type": "DatasetReference"
+							},
+							"name": "MaxsurrogateKey"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "Widget_dim_1",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						},
+						{
+							"dataset": {
+								"referenceName": "Widget_dim_1",
+								"type": "DatasetReference"
+							},
+							"name": "sink2"
+						}
+					],
+					"transformations": [
+						{
+							"name": "GetUpdatedRecord"
+						},
+						{
+							"name": "AdddestinationFields"
+						},
+						{
+							"name": "derivedUpdateColumns"
+						},
+						{
+							"name": "alterRow1"
+						},
+						{
+							"name": "exists2"
+						},
+						{
+							"name": "join1"
+						},
+						{
+							"name": "surrogateKey1"
+						},
+						{
+							"name": "derivedColumn2"
+						},
+						{
+							"name": "aggregate1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          widget_id as integer,",
+						"          name as string,",
+						"          cost as double",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> Stg",
+						"source(output(",
+						"          widget_key as integer,",
+						"          widget_id as integer,",
+						"          name as string,",
+						"          cost as double,",
+						"          added_date as date,",
+						"          updated_date as date",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> Destination",
+						"source(output(",
+						"          widget_key as integer,",
+						"          widget_id as integer,",
+						"          name as string,",
+						"          cost as double,",
+						"          added_date as date,",
+						"          updated_date as date",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> MaxsurrogateKey",
+						"Stg, Destination exists(Stg@widget_id == Destination@widget_id,",
+						"     negate:false,",
+						"     broadcast: 'auto')~> GetUpdatedRecord",
+						"GetUpdatedRecord, Destination lookup(Stg@widget_id == Destination@widget_id,",
+						"     multiple: false,",
+						"     pickup: 'any',",
+						"     broadcast: 'auto')~> AdddestinationFields",
+						"AdddestinationFields derive(updated_date = currentDate('UTC')) ~> derivedUpdateColumns",
+						"derivedUpdateColumns alterRow(updateIf(true())) ~> alterRow1",
+						"Stg, Destination exists(Stg@widget_id == Destination@widget_id,",
+						"     negate:true,",
+						"     broadcast: 'auto')~> exists2",
+						"exists2, aggregate1 join(and(!isNull(widget_id),!isNull(max_surrogate)),",
+						"     joinType:'cross',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> join1",
+						"join1 keyGenerate(output(surrogate_key_root as long),",
+						"     startAt: 1L,",
+						"     stepValue: 1L) ~> surrogateKey1",
+						"surrogateKey1 derive(widget_key = add(max_surrogate,surrogate_key_root),",
+						"          added_date = currentDate('UTC')) ~> derivedColumn2",
+						"MaxsurrogateKey aggregate(max_surrogate = iifNull(max(widget_key), 1)) ~> aggregate1",
+						"alterRow1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          widget_key as integer,",
+						"          widget_id as integer,",
+						"          name as string,",
+						"          cost as double,",
+						"          added_date as date,",
+						"          updated_date as date",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> sink1",
+						"derivedColumn2 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          widget_key as integer,",
+						"          widget_id as integer,",
+						"          name as string,",
+						"          cost as double,",
+						"          added_date as date,",
+						"          updated_date as date",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> sink2"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/Widget_dim_stg')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/dataflow1')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
@@ -866,360 +1147,6 @@
 				"[concat(variables('factoryId'), '/datasets/source')]",
 				"[concat(variables('factoryId'), '/datasets/sinksql')]"
 			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/dataflow5')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "source",
-								"type": "DatasetReference"
-							},
-							"name": "Blobsource"
-						},
-						{
-							"dataset": {
-								"referenceName": "sinksql",
-								"type": "DatasetReference"
-							},
-							"name": "SinkasSource"
-						}
-					],
-					"sinks": [
-						{
-							"dataset": {
-								"referenceName": "sinksql",
-								"type": "DatasetReference"
-							},
-							"name": "sink1"
-						},
-						{
-							"dataset": {
-								"referenceName": "sinksql",
-								"type": "DatasetReference"
-							},
-							"name": "sink2"
-						}
-					],
-					"transformations": [
-						{
-							"name": "MaxKey"
-						},
-						{
-							"name": "AddKeyRoot"
-						},
-						{
-							"name": "AddMaxKey"
-						},
-						{
-							"name": "CalculateNewKey"
-						},
-						{
-							"name": "derivedColumn1"
-						},
-						{
-							"name": "GetOldRecords"
-						},
-						{
-							"name": "setactivefalse"
-						},
-						{
-							"name": "alterRow1"
-						}
-					],
-					"scriptLines": [
-						"source(output(",
-						"          id as integer,",
-						"          first_name as string,",
-						"          last_name as string,",
-						"          age as string,",
-						"          hobby as string",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     ignoreNoFilesFound: false) ~> Blobsource",
-						"source(output(",
-						"          key as integer,",
-						"          active as boolean,",
-						"          created as timestamp,",
-						"          id as integer,",
-						"          first_name as string,",
-						"          last_name as string,",
-						"          age as integer,",
-						"          hobby as string",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     isolationLevel: 'READ_UNCOMMITTED',",
-						"     format: 'table') ~> SinkasSource",
-						"SinkasSource aggregate(Max_Key = iifNull(max(key), 0)) ~> MaxKey",
-						"Blobsource keyGenerate(output(key_root as long),",
-						"     startAt: 1L,",
-						"     stepValue: 1L) ~> AddKeyRoot",
-						"AddKeyRoot, MaxKey join(and(not(isNull(id)),not(isNull(Max_Key))),",
-						"     joinType:'cross',",
-						"     matchType:'exact',",
-						"     ignoreSpaces: false,",
-						"     broadcast: 'auto')~> AddMaxKey",
-						"AddMaxKey derive(key = toInteger(add(key_root,Max_Key))) ~> CalculateNewKey",
-						"CalculateNewKey derive(active = true(),",
-						"          created = currentUTC()) ~> derivedColumn1",
-						"Blobsource, SinkasSource join(and(Blobsource@id==SinkasSource@id,active==true()),",
-						"     joinType:'cross',",
-						"     matchType:'exact',",
-						"     ignoreSpaces: false,",
-						"     broadcast: 'auto')~> GetOldRecords",
-						"GetOldRecords derive(active = false()) ~> setactivefalse",
-						"setactivefalse alterRow(updateIf(true())) ~> alterRow1",
-						"derivedColumn1 sink(allowSchemaDrift: false,",
-						"     validateSchema: false,",
-						"     input(",
-						"          key as integer,",
-						"          active as boolean,",
-						"          created as timestamp,",
-						"          id as integer,",
-						"          first_name as string,",
-						"          last_name as string,",
-						"          age as integer,",
-						"          hobby as string",
-						"     ),",
-						"     deletable:false,",
-						"     insertable:true,",
-						"     updateable:false,",
-						"     upsertable:false,",
-						"     format: 'table',",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true,",
-						"     errorHandlingOption: 'stopOnFirstError') ~> sink1",
-						"alterRow1 sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     input(",
-						"          key as integer,",
-						"          active as boolean,",
-						"          created as timestamp,",
-						"          id as integer,",
-						"          first_name as string,",
-						"          last_name as string,",
-						"          age as integer,",
-						"          hobby as string",
-						"     ),",
-						"     deletable:false,",
-						"     insertable:false,",
-						"     updateable:true,",
-						"     upsertable:false,",
-						"     keys:['key'],",
-						"     format: 'table',",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true,",
-						"     errorHandlingOption: 'stopOnFirstError') ~> sink2"
-					]
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/source')]",
-				"[concat(variables('factoryId'), '/datasets/sinksql')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/dataflow6')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "house_listings",
-								"type": "DatasetReference"
-							},
-							"name": "houselistings"
-						}
-					],
-					"sinks": [
-						{
-							"dataset": {
-								"referenceName": "bungalow_listings",
-								"type": "DatasetReference"
-							},
-							"name": "bungalowlistings"
-						}
-					],
-					"transformations": [
-						{
-							"name": "BungalowsOnly"
-						}
-					],
-					"scriptLines": [
-						"source(output(",
-						"          Listing_ID as string,",
-						"          Type as string,",
-						"          Address as string",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     ignoreNoFilesFound: false) ~> houselistings",
-						"houselistings filter(equalsIgnoreCase(Type, 'Bungalow')) ~> BungalowsOnly",
-						"BungalowsOnly sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> bungalowlistings"
-					]
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/house_listings')]",
-				"[concat(variables('factoryId'), '/datasets/bungalow_listings')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/dataflow7')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "Persontable",
-								"type": "DatasetReference"
-							},
-							"name": "PersonTable"
-						}
-					],
-					"sinks": [
-						{
-							"dataset": {
-								"referenceName": "AdultTable",
-								"type": "DatasetReference"
-							},
-							"name": "AdultTable"
-						},
-						{
-							"dataset": {
-								"referenceName": "ChildTable",
-								"type": "DatasetReference"
-							},
-							"name": "ChildTable"
-						}
-					],
-					"transformations": [
-						{
-							"name": "split1"
-						}
-					],
-					"scriptLines": [
-						"source(output(",
-						"          person_id as integer,",
-						"          name as string,",
-						"          age as integer",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     isolationLevel: 'READ_UNCOMMITTED',",
-						"     format: 'table') ~> PersonTable",
-						"PersonTable split(age>=18,",
-						"     disjoint: false) ~> split1@(Adults, Children)",
-						"split1@Adults sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     input(",
-						"          person_id as integer,",
-						"          name as string,",
-						"          age as integer",
-						"     ),",
-						"     deletable:false,",
-						"     insertable:true,",
-						"     updateable:false,",
-						"     upsertable:false,",
-						"     format: 'table',",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true,",
-						"     errorHandlingOption: 'stopOnFirstError') ~> AdultTable",
-						"split1@Children sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     input(",
-						"          person_id as integer,",
-						"          name as string,",
-						"          age as integer",
-						"     ),",
-						"     deletable:false,",
-						"     insertable:true,",
-						"     updateable:false,",
-						"     upsertable:false,",
-						"     format: 'table',",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true,",
-						"     errorHandlingOption: 'stopOnFirstError') ~> ChildTable"
-					]
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/dataflow8')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "InputJson",
-								"type": "DatasetReference"
-							},
-							"name": "InputJson"
-						}
-					],
-					"sinks": [
-						{
-							"dataset": {
-								"referenceName": "OutputJson",
-								"type": "DatasetReference"
-							},
-							"name": "sink1"
-						}
-					],
-					"transformations": [
-						{
-							"name": "flatten1"
-						}
-					],
-					"scriptLines": [
-						"source(output(",
-						"          albums as (name as string, tracks as (trackid as integer, name as string)[])[]",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     ignoreNoFilesFound: false,",
-						"     documentForm: 'documentPerLine') ~> InputJson",
-						"InputJson foldDown(unroll(albums.tracks),",
-						"     mapColumn(",
-						"          album_name = albums.name,",
-						"          track_id = albums.tracks.trackid,",
-						"          track_name = albums.tracks.name",
-						"     ),",
-						"     skipDuplicateMapInputs: false,",
-						"     skipDuplicateMapOutputs: false) ~> flatten1",
-						"flatten1 sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     input(",
-						"          albums as (name as string, tracks as (trackid as integer, name as string)[])[]",
-						"     ),",
-						"     partitionFileNames:['AlbumsFlattened'],",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true,",
-						"     partitionBy('hash', 1)) ~> sink1"
-					]
-				}
-			},
-			"dependsOn": []
 		}
 	]
 }

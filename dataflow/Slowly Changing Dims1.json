@@ -125,7 +125,7 @@
 				"join1 keyGenerate(output(surrogate_key_root as long),",
 				"     startAt: 1L,",
 				"     stepValue: 1L) ~> surrogateKey1",
-				"surrogateKey1 derive(widget_id = add(max_surrogate,surrogate_key_root),",
+				"surrogateKey1 derive(widget_key = add(max_surrogate,surrogate_key_root),",
 				"          added_date = currentDate('UTC')) ~> derivedColumn2",
 				"MaxsurrogateKey aggregate(max_surrogate = iifNull(max(widget_key), 1)) ~> aggregate1",
 				"alterRow1 sink(allowSchemaDrift: true,",

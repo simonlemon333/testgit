@@ -1,0 +1,148 @@
+{
+	"name": "Slowly Changing Dims1",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "Widget_dim_stg",
+						"type": "DatasetReference"
+					},
+					"name": "Stg"
+				},
+				{
+					"dataset": {
+						"referenceName": "Widget_dim_1",
+						"type": "DatasetReference"
+					},
+					"name": "Destination"
+				},
+				{
+					"dataset": {
+						"referenceName": "Widget_dim_1",
+						"type": "DatasetReference"
+					},
+					"name": "MaxsurrogateKey"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "Widget_dim_1",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				},
+				{
+					"name": "sink2"
+				}
+			],
+			"transformations": [
+				{
+					"name": "GetUpdatedRecord"
+				},
+				{
+					"name": "AdddestinationFields"
+				},
+				{
+					"name": "derivedUpdateColumns"
+				},
+				{
+					"name": "alterRow1"
+				},
+				{
+					"name": "exists2"
+				},
+				{
+					"name": "join1"
+				},
+				{
+					"name": "surrogateKey1"
+				},
+				{
+					"name": "derivedColumn2"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          widget_id as integer,",
+				"          name as string,",
+				"          cost as double",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> Stg",
+				"source(output(",
+				"          widget_key as integer,",
+				"          widget_id as integer,",
+				"          name as string,",
+				"          cost as double,",
+				"          added_date as date,",
+				"          updated_date as date",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> Destination",
+				"source(output(",
+				"          widget_key as integer,",
+				"          widget_id as integer,",
+				"          name as string,",
+				"          cost as double,",
+				"          added_date as date,",
+				"          updated_date as date",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     query: 'select isnull(max(widget_key),1) max_surrogate from Widget_dim_1',",
+				"     format: 'query') ~> MaxsurrogateKey",
+				"Stg, Destination exists(Stg@widget_id == Destination@widget_id,",
+				"     negate:false,",
+				"     broadcast: 'auto')~> GetUpdatedRecord",
+				"GetUpdatedRecord, Destination lookup(Stg@widget_id == Destination@widget_id,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> AdddestinationFields",
+				"AdddestinationFields derive(updated_date = currentDate('UTC')) ~> derivedUpdateColumns",
+				"derivedUpdateColumns alterRow(updateIf(true())) ~> alterRow1",
+				"Stg, Destination exists(Stg@widget_id == Destination@widget_id,",
+				"     negate:true,",
+				"     broadcast: 'auto')~> exists2",
+				"exists2, MaxsurrogateKey join(and(!isNull(Stg@widget_id)),",
+				"     joinType:'cross',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> join1",
+				"join1 keyGenerate(output({undefined} as long),",
+				"     startAt: 1L,",
+				"     stepValue: 1L) ~> surrogateKey1",
+				"surrogateKey1 derive() ~> derivedColumn2",
+				"alterRow1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          widget_key as integer,",
+				"          widget_id as integer,",
+				"          name as string,",
+				"          cost as double,",
+				"          added_date as date,",
+				"          updated_date as date",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> sink1",
+				"derivedColumn2 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> sink2"
+			]
+		}
+	}
+}

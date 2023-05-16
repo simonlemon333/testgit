@@ -17,15 +17,58 @@
 						"type": "DatasetReference"
 					},
 					"name": "source2"
+				},
+				{
+					"dataset": {
+						"referenceName": "Widget_dim_2",
+						"type": "DatasetReference"
+					},
+					"name": "source3"
 				}
 			],
-			"sinks": [],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "Widget_dim_2",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				},
+				{
+					"dataset": {
+						"referenceName": "Widget_dim_2",
+						"type": "DatasetReference"
+					},
+					"name": "sink2"
+				}
+			],
 			"transformations": [
 				{
 					"name": "aggregate1"
 				},
 				{
 					"name": "join1"
+				},
+				{
+					"name": "surrogateKey1"
+				},
+				{
+					"name": "derivedColumn1"
+				},
+				{
+					"name": "filter1"
+				},
+				{
+					"name": "exists1"
+				},
+				{
+					"name": "exists2"
+				},
+				{
+					"name": "derivedColumn2"
+				},
+				{
+					"name": "alterRow1"
 				}
 			],
 			"scriptLines": [
@@ -44,18 +87,87 @@
 				"          name as string,",
 				"          cost as double,",
 				"          added_date as date,",
-				"          updated_date as date",
+				"          updated_date as date,",
+				"          active_flag as boolean",
 				"     ),",
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     isolationLevel: 'READ_UNCOMMITTED',",
 				"     format: 'table') ~> source2",
+				"source(output(",
+				"          widget_key as integer,",
+				"          widget_id as integer,",
+				"          name as string,",
+				"          cost as double,",
+				"          added_date as date,",
+				"          updated_date as date,",
+				"          active_flag as boolean",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> source3",
 				"source2 aggregate(max_surrogate = iifNull(max(widget_key), 1)) ~> aggregate1",
 				"source1, aggregate1 join(and(!isNull(widget_id),!isNull(max_surrogate)),",
 				"     joinType:'cross',",
 				"     matchType:'exact',",
 				"     ignoreSpaces: false,",
-				"     broadcast: 'auto')~> join1"
+				"     broadcast: 'auto')~> join1",
+				"join1 keyGenerate(output(surrogate_key_root as long),",
+				"     startAt: 1L,",
+				"     stepValue: 1L) ~> surrogateKey1",
+				"surrogateKey1 derive(added_date = currentDate('UTC'),",
+				"          widget_key = toInteger(add(max_surrogate,surrogate_key_root)),",
+				"          active_flag = true(),",
+				"          end_date = toDate(null())) ~> derivedColumn1",
+				"source3 filter(equals(active_flag,true())) ~> filter1",
+				"filter1, source1 exists(source3@widget_id == source1@widget_id,",
+				"     negate:false,",
+				"     broadcast: 'auto')~> exists1",
+				"exists1, derivedColumn1 exists(source3@widget_key == derivedColumn1@widget_key,",
+				"     negate:true,",
+				"     broadcast: 'auto')~> exists2",
+				"exists2 derive(updated_date = currentDate('UTC'),",
+				"          active_flag = false()) ~> derivedColumn2",
+				"derivedColumn2 alterRow(updateIf(true())) ~> alterRow1",
+				"derivedColumn1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          widget_key as integer,",
+				"          widget_id as integer,",
+				"          name as string,",
+				"          cost as double,",
+				"          added_date as date,",
+				"          updated_date as date,",
+				"          active_flag as boolean",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> sink1",
+				"alterRow1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          widget_key as integer,",
+				"          widget_id as integer,",
+				"          name as string,",
+				"          cost as double,",
+				"          added_date as date,",
+				"          updated_date as date,",
+				"          active_flag as boolean",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> sink2"
 			]
 		}
 	}
